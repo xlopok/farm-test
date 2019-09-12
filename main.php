@@ -109,7 +109,7 @@ class Farm
     }
 }
 
-$farm = new Farm('Ферма Дядушки Бена');
+$farm = new Farm('Ферма Дядушки Боба');
 define("Cows", 10);
 define("Chickens", 20);
 
