@@ -110,14 +110,14 @@ class Farm
 }
 
 $farm = new Farm('Ферма Дядушки Боба');
-define("Cows", 10);
-define("Chickens", 20);
+define("COWS", 10);
+define("CHICKENS", 20);
 
-for ($i = 0; $i < Cows; $i++) {
+for ($i = 0; $i < COWS; $i++) {
     $farm->addAnimal(new Cow());
 }
 
-for ($i = 0; $i < Chickens; $i++) {
+for ($i = 0; $i < CHICKENS; $i++) {
     $farm->addAnimal(new Chicken());
 }
 $farm->collectGoods();
