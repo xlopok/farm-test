@@ -6,7 +6,7 @@ abstract class Animal
 
     public function __construct()
     {
-        $this->id = mt_rand(0, 999);
+        $this->id = static::class . ':' . mt_rand(0, 999);
     }
 
     public function getId()
@@ -17,16 +17,18 @@ abstract class Animal
 
 interface giveMilk {
     public function giveMilk();
-    public function getMilk(): int;
 }
 
 interface giveEggs {
     public function giveEggs();
-    public function getEggs(): int;
+}
+
+interface Collect {
+    public function collectFromAnimal();
 }
 
 
-class Cow extends Animal implements giveMilk
+class Cow extends Animal implements giveMilk, Collect
 {
     private $milk = 0;
 
@@ -35,13 +37,14 @@ class Cow extends Animal implements giveMilk
         $this->milk = rand(8, 12);
     }
 
-    public function getMilk(): int
+    public function collectFromAnimal()
     {
-        return $this->milk;
+        $this->giveMilk();
+        return self::class . ':' . $this->milk;
     }
 }
 
-class Chicken extends Animal implements giveEggs
+class Chicken extends Animal implements giveEggs, Collect
 {
     private $eggs = 0;
 
@@ -50,9 +53,38 @@ class Chicken extends Animal implements giveEggs
         $this->eggs = rand(0, 1);
     }
 
-    public function getEggs(): int
+    public function collectFromAnimal()
     {
-        return $this->eggs;
+        $this->giveEggs();
+        return self::class . ':' . $this->eggs;
+    }
+}
+
+class Storage
+{
+    private $totalMilk = 0;
+    private $totalEggs = 0;
+
+    public function addGoods($storageItem)
+    {
+        $explodedStorageItem = explode(':', $storageItem);
+
+        if($explodedStorageItem[0] === 'Cow') {
+           $this->totalMilk += $explodedStorageItem[1];
+        }
+        if($explodedStorageItem[0] === 'Chicken') {
+            $this->totalEggs += $explodedStorageItem[1];
+        }
+    }
+
+    public function howMuchMilk(): int
+    {
+        return $this->totalMilk;
+    }
+
+    public function howMuchEggs(): int
+    {
+        return $this->totalEggs;
     }
 }
 
@@ -60,12 +92,12 @@ class Farm
 {
     private $name = '';
     private $animals = [];
-    private $totalMilk = 0;
-    private $totalEggs = 0;
+    private $storage;
 
-    public function __construct(string $name)
+    public function __construct(string $name, Storage $storage)
     {
         $this->name = $name;
+        $this->storage = $storage;
     }
 
     public function getFarmName(): string
@@ -78,38 +110,26 @@ class Farm
         $this->animals[] = $animal;
     }
 
-    public function getAnimals(): ?array
-    {
-        return $this->animals;
-    }
-
     public function getTotalMilk(): int
     {
-        return $this->totalMilk;
+        return $this->storage->howMuchMilk();
     }
 
     public function getTotalEggs(): int
     {
-        return $this->totalEggs;
+        return $this->storage->howMuchEggs();
     }
+
 
     public function collectGoods()
     {
         foreach ($this->animals as $animal) {
-            if($animal instanceof giveMilk) {
-                $animal->giveMilk();
-                $this->totalMilk  += $animal->getMilk();
-            }
-
-            if($animal instanceof giveEggs) {
-                $animal->giveEggs();
-                $this->totalEggs += $animal->getEggs();
-            }
+           $this->storage->addGoods($animal->collectFromAnimal());
         }
     }
 }
 
-$farm = new Farm('Ферма Дядушки Боба');
+$farm = new Farm('Ферма Дядушки Боба', new Storage());
 define("COWS", 10);
 define("CHICKENS", 20);
 
@@ -120,6 +140,7 @@ for ($i = 0; $i < COWS; $i++) {
 for ($i = 0; $i < CHICKENS; $i++) {
     $farm->addAnimal(new Chicken());
 }
+
 $farm->collectGoods();
 
 echo "На ферме \"" . $farm->getFarmName() . "\" было собрано: " . $farm->getTotalMilk() . ' л. молока и ' . $farm->getTotalEggs() . ' шт. яиц.'.'<br>';
